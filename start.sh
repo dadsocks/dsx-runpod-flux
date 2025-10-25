@@ -141,9 +141,31 @@ if [[ -f /runtime/civitai_models.txt ]]; then
   popd >/dev/null
 fi
 
-# ---------- 4) Launch code-server (VS Code in browser) ----------
+# ---------- 4) Configure & Launch code-server (VS Code in browser) ----------
+# If CODE_SERVER_PASSWORD is set, patch or create the code-server config first
+if [[ -n "${CODE_SERVER_PASSWORD:-}" ]]; then
+  mkdir -p /root/.config/code-server
+  if [[ -f /root/.config/code-server/config.yaml ]]; then
+    # Update password & port if config exists
+    sed -i "s/^password: .*/password: ${CODE_SERVER_PASSWORD}/" /root/.config/code-server/config.yaml || true
+    sed -i "s/^bind-addr: .*/bind-addr: 0.0.0.0:${CODE_SERVER_PORT}/" /root/.config/code-server/config.yaml || true
+    # Ensure auth and cert settings are present
+    grep -q '^auth:' /root/.config/code-server/config.yaml || echo "auth: password" >> /root/.config/code-server/config.yaml
+    grep -q '^cert:' /root/.config/code-server/config.yaml || echo "cert: false" >> /root/.config/code-server/config.yaml
+  else
+    # Create a minimal config when none exists
+    cat > /root/.config/code-server/config.yaml <<EOF
+bind-addr: 0.0.0.0:${CODE_SERVER_PORT}
+auth: password
+password: ${CODE_SERVER_PASSWORD}
+cert: false
+EOF
+  fi
+fi
+
 echo "Starting code-server on port ${CODE_SERVER_PORT}"
 nohup code-server --bind-addr 0.0.0.0:${CODE_SERVER_PORT} "${WORKSPACE}" >/var/log/code-server.log 2>&1 &
+
 
 # ---------- 5) Launch ComfyUI ----------
 echo "Starting ComfyUI on port ${COMFY_PORT}"
