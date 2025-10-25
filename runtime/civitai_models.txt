@@ -1,1 +1,3 @@
-
+# Examples (uncomment / replace with your own)
+# id=806265
+# https://civitai.com/api/download/models/346065
