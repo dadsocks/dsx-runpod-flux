@@ -3,5 +3,4 @@ https://github.com/cubiq/ComfyUI_essentials.git
 https://github.com/WASasquatch/was-node-suite-comfyui.git
 https://github.com/cubiq/ComfyUI_IPAdapter_plus.git
 https://github.com/Fannovel16/comfyui_controlnet_aux.git
-https://github.com/ltdrdata/ComfyUI-Impact-Pack.git
 https://github.com/ssitu/ComfyUI_UltimateSDUpscale.git
