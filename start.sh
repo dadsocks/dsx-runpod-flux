@@ -23,20 +23,20 @@ mkdir -p "$UNET_DIR" "$VAE_DIR" "$CLIP_DIR" "$CN_DIR" "$LORA_DIR" "$WORKSPACE/cu
 hf_dl () {
   # $1 = repo_id (e.g., black-forest-labs/FLUX.1-dev)
   # $2 = file path in repo (e.g., ae.safetensors)
+  # $3 = optional: custom local-dir (defaults to /workspace/hf-cache/<repo>)
   local repo="$1"
   local file="$2"
-  if [[ -z "${HF_TOKEN}" ]]; then
-    echo "ERROR: HF_TOKEN is not set but is required to download ${repo}/${file}"
-    exit 1
+  local localdir="${3:-$WORKSPACE/hf-cache/${repo}}"
+
+  mkdir -p "$localdir"
+  # Build args dynamically so we only pass --token if present
+  local args=(download "$repo" "$file" --local-dir "$localdir" --local-dir-use-symlinks False --resume)
+  if [[ -n "${HF_TOKEN:-}" ]]; then
+    args+=(--token "$HF_TOKEN")
   fi
-  huggingface-cli download "$repo" "$file" \
-    --token "$HF_TOKEN" \
-    --local-dir "$WORKSPACE/hf-cache/${repo}" \
-    --local-dir-use-symlinks False \
-    --resume \
-    >/dev/null
-  local src="$WORKSPACE/hf-cache/${repo}/$file"
-  echo "$src"
+
+  huggingface-cli "${args[@]}" >/dev/null
+  echo "$localdir/$file"
 }
 
 civit_dl () {
@@ -96,6 +96,7 @@ done
 # ---------- 2) Download FLUX.1-dev + encoders + VAE at runtime ----------
 # Hugging Face repo(s)
 FLUX_REPO="black-forest-labs/FLUX.1-dev"
+ENC_REPO="comfyanonymous/flux_text_encoders"
 # Typical filenames (subject to change upstream; we try common names + fallbacks)
 UNET_FILES=("flux1-dev.safetensors" "flux1-dev-fp8.safetensors" "flux1-dev-fp8_e4m3fn_scaled.safetensors")
 VAE_FILES=("ae.safetensors")
@@ -117,18 +118,33 @@ for f in "${VAE_FILES[@]}"; do
   cp -f "$src" "$VAE_DIR/"
 done
 
-echo "Downloading CLIP L + T5 encoders..."
-for f in "${CLIP_FILES[@]}"; do
-  src="$(hf_dl "$FLUX_REPO" "$f")"
-  cp -f "$src" "$CLIP_DIR/"
-done
+echo "Downloading CLIP-L from ${ENC_REPO}..."
+clip_file="clip_l.safetensors"
+if src="$(hf_dl "$ENC_REPO" "$clip_file" 2>/dev/null || true)"; then
+  if [[ -f "$src" ]]; then
+    cp -f "$src" "$CLIP_DIR/"
+    echo "CLIP-L → $CLIP_DIR/$(basename "$src")"
+  else
+    echo "WARN: CLIP-L not found after download attempt."
+  fi
+else
+  echo "WARN: CLIP-L download failed from ${ENC_REPO}."
+fi
+
+echo "Downloading T5-XXL from ${ENC_REPO}..."
+t5_candidates=("t5xxl_fp16.safetensors" "t5xxl_fp8_e4m3fn_scaled.safetensors")
 found_t5=""
-for f in "${T5_FILES[@]}"; do
-  if src="$(hf_dl "$FLUX_REPO" "$f" 2>/dev/null || true)"; then
-    if [[ -f "$src" ]]; then cp -f "$src" "$CLIP_DIR/"; found_t5="$f"; break; fi
+for f in "${t5_candidates[@]}"; do
+  if src="$(hf_dl "$ENC_REPO" "$f" 2>/dev/null || true)"; then
+    if [[ -f "$src" ]]; then
+      cp -f "$src" "$CLIP_DIR/"
+      found_t5="$f"
+      echo "T5-XXL → $CLIP_DIR/$f"
+      break
+    fi
   fi
 done
-[[ -z "$found_t5" ]] && { echo "ERROR: Could not fetch a T5 encoder (t5xxl*)."; exit 1; }
+[[ -z "$found_t5" ]] && echo "WARN: No T5-XXL file found in ${ENC_REPO}."
 
 # ---------- 3) Optional: download extra models from Civitai ----------
 if [[ -f /runtime/civitai_models.txt ]]; then
