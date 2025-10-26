@@ -72,11 +72,14 @@ if [[ -f /runtime/custom_nodes.txt ]]; then
   done < /runtime/custom_nodes.txt
 fi
 
-# Install any node requirements
-find "$COMFY_HOME/custom_nodes" -maxdepth=2 -name requirements.txt -print0 | while IFS= read -r -d '' req; do
-  echo "Installing node requirements: $req"
-  pip install -r "$req" || true
-done
+# Install any custom-node Python requirements (ignore failures)
+if [[ -d "$COMFY_HOME/custom_nodes" ]]; then
+  while IFS= read -r -d '' req; do
+    echo "Installing node requirements: $req"
+    pip install -r "$req" || true
+  done < <(find "$COMFY_HOME/custom_nodes" -maxdepth 2 -type f -name requirements.txt -print0 2>/dev/null)
+fi
+
 
 # ---- 2) FLUX + VAE + Encoders (inside app tree) ----
 FLUX_REPO="black-forest-labs/FLUX.1-dev"          # UNET + VAE
