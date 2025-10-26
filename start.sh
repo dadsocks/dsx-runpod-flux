@@ -4,8 +4,8 @@ set -euo pipefail
 # ---------- Env & defaults ----------
 export HF_TOKEN="${HF_TOKEN:-}"                 # Required for FLUX.1-dev (gated)
 export CIVITAI_API_KEY="${CIVITAI_API_KEY:-}"   # Optional (private rate limits)
-export COMFY_PORT="${COMFY_PORT:-8188}"
-export CODE_SERVER_PORT="${CODE_SERVER_PORT:-13337}"
+export COMFY_PORT="${COMFY_PORT:-3000}"
+export CODE_SERVER_PORT="${CODE_SERVER_PORT:-8080}"
 export COMFY_HOME="${COMFY_HOME:-/opt/ComfyUI}"
 export WORKSPACE="${WORKSPACE:-/workspace}"
 export PATH="/venv/bin:$PATH"
