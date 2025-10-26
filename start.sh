@@ -21,6 +21,10 @@ else
   (cd "$COMFY_HOME" && git pull --ff-only || true)
 fi
 
+echo "Installing ComfyUI requirements ..."
+source /venv/bin/activate
+pip install -r "$COMFY_HOME/requirements.txt" --no-cache-dir || echo "WARN: Some ComfyUI deps failed to install"
+
 # ---- Model directories INSIDE ComfyUI app tree ----
 MODEL_ROOT="$COMFY_HOME/models"
 DIFF_DIR="$MODEL_ROOT/diffusion_models"   # Flux UNET
@@ -165,4 +169,10 @@ nohup code-server --bind-addr 0.0.0.0:${CODE_SERVER_PORT} "${WORKSPACE}" >/var/l
 echo "Starting ComfyUI on port ${COMFY_PORT}"
 cd "$COMFY_HOME"
 source /venv/bin/activate
-exec python main.py --listen 0.0.0.0 --port "${COMFY_PORT}"
+python main.py --listen 0.0.0.0 --port "${COMFY_PORT}" || {
+  echo "ComfyUI crashed. Check logs under $COMFY_HOME or any printed traceback above."
+  # Optional: try to show the last few lines from any log files if present
+  tail -n 200 "$COMFY_HOME"/logs/*.log 2>/dev/null || true
+  # Keep container alive for VS Code debugging instead of restart-looping
+  sleep 3600
+}
