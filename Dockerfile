@@ -3,63 +3,50 @@ FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 SHELL ["/bin/bash","-lc"]
 
+# 2) Environment
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
     PYTHONUNBUFFERED=1 \
-    # ComfyUI defaults
-    COMFY_PORT=8188 \
-    # code-server defaults (VS Code in the browser)
-    CODE_SERVER_PORT=13337 \
-    # Where ComfyUI lives
-    COMFY_HOME=/opt/ComfyUI \
-    # Where models land (RunPod persists /workspace by default)
-    WORKSPACE=/workspace
+    # Where persistent files live on RunPod
+    WORKSPACE=/workspace \
+    # ComfyUI app will live inside the persistent volume
+    COMFY_HOME=/workspace/ComfyUI \
+    # Default ports (override via RunPod env if you like)
+    COMFY_PORT=3000 \
+    CODE_SERVER_PORT=8080
 
-# 2) System deps
+# 3) System deps + code-server
 RUN set -euxo pipefail \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
       git curl wget ca-certificates tini python3 python3-pip python3-venv \
       build-essential ffmpeg unzip nano \
- # code-server (VS Code) - official install script
  && curl -fsSL https://code-server.dev/install.sh | sh \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 3) ComfyUI (no models here)
-RUN git clone --depth=1 https://github.com/comfyanonymous/ComfyUI.git $COMFY_HOME
-
-# 4) Python venv + deps
+# 4) Python venv + base Python deps (ComfyUI deps will be installed at runtime after clone)
 RUN python3 -m venv /venv \
  && source /venv/bin/activate \
- && pip install --upgrade pip wheel \
- && pip install -r $COMFY_HOME/requirements.txt \
- && pip install -r /tmp/req.txt || true
+ && pip install --upgrade pip wheel
 
-# 4b) Our extra requirements (huggingface_hub, etc.)
+# 4b) Extra runtime helpers (HF client, requests, gitpython, tqdm)
 COPY requirements.txt /tmp/req.txt
-RUN source /venv/bin/activate && pip install -r /tmp/req.txt
+RUN source /venv/bin/activate && pip install -r /tmp/req.txt || true
 
-# 5) Create model folders (ComfyUI expects these)
-RUN mkdir -p $WORKSPACE/models/unet \
-             $WORKSPACE/models/vae \
-             $WORKSPACE/models/clip \
-             $WORKSPACE/models/loras \
-             $WORKSPACE/models/checkpoints \
-             $WORKSPACE/models/upscale_models \
-             $WORKSPACE/models/controlnet \
-             $WORKSPACE/custom_nodes
+# 5) Prepare persistent workspace dir
+RUN mkdir -p $WORKSPACE
 
-# 6) Copy runtime config
+# 6) Config + startup
 COPY config/codeserver.yaml /root/.config/code-server/config.yaml
 COPY config/comfyui.env /etc/comfyui.env
 COPY runtime /runtime
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
+# 7) Networking + default workdir
 EXPOSE ${COMFY_PORT} ${CODE_SERVER_PORT}
 WORKDIR ${WORKSPACE}
 
-# Use tini for proper signal handling
-ENTRYPOINT ["/usr/bin/tini","--"]
+# 8) Proper init (tini as subreaper) and start script
+ENTRYPOINT ["/usr/bin/tini","-s","--"]
 CMD ["/start.sh"]
-
