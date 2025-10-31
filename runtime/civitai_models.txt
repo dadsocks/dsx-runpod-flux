@@ -4,3 +4,6 @@ https://civitai.com/api/download/models/2196476
 https://civitai.com/api/download/models/1520689
 https://civitai.com/api/download/models/1191560
 https://civitai.com/api/download/models/2006074
+https://civitai.com/api/download/models/1823390
+https://civitai.com/api/download/models/1278791
+https://civitai.com/api/download/models/1334949
