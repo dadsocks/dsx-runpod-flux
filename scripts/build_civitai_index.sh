@@ -121,7 +121,7 @@ ${PREVIEWS}
 EOF
 
   # 5) Update INDEX
-  echo "| ![](_images/${VER_ID}-1.jpg) | ${MODEL_NAME} | ${VER_NAME} | [version](https://civitai.com/model-versions/${VER_ID}) | \`${FILE_NAME}\` | ${TRAINED_WORDS:-—} |" >> "$INDEX_MD"
+  echo "| ![](images/${VER_ID}-1.jpg) | ${MODEL_NAME} | ${VER_NAME} | [version](https://civitai.com/model-versions/${VER_ID}) | \`${FILE_NAME}\` | ${TRAINED_WORDS:-—} | [Details](readmes/${VER_ID}.md) |" >> "$INDEX_MD"
 
 done < "$INPUT_FILE"
 
