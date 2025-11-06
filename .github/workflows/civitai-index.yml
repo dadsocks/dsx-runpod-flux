@@ -1,0 +1,47 @@
+name: Build CivitAI LoRA Index
+
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - 'runtime/civitai_models.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+
+      - name: Build LoRA index & READMEs
+        env:
+          CIVITAI_API_TOKEN: ${{ secrets.CIVITAI_API_TOKEN }}
+        run: |
+          bash scripts/build_civitai_index.sh runtime/civitai_links.txt docs/loras
+
+      - name: Commit changes
+        run: |
+          set -e
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/loras
+            git commit -m "chore(loras): update CivitAI index & READMEs"
+            git push
+          else
+            echo "No changes to commit."
+          fi
+
+      - name: Upload artifact (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: loras-docs
+          path: docs/loras
