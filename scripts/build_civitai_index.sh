@@ -98,7 +98,7 @@ while IFS= read -r LINE || [[ -n "$LINE" ]]; do
   [[ -z "$PREVIEWS" ]] && PREVIEWS="(no preview)"
 
   # 4) Write per-LoRA README
-  README="${OUT_DIR}/_readmes/${VER_ID}.md"
+  README="${OUT_DIR}/readmes/${VER_ID}.md"
   cat > "$README" <<EOF
 # ${MODEL_NAME} — ${VER_NAME}
 
