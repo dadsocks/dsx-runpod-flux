@@ -4,7 +4,7 @@ set -euo pipefail
 
 INPUT_FILE="${1:-runtime/civitai_models.txt}"
 OUT_DIR="${2:-docs/loras}"
-mkdir -p "$OUT_DIR"/_readmes "$OUT_DIR"/_images
+mkdir -p "$OUT_DIR"/readmes "$OUT_DIR"/images
 
 # Optional auth header (needed for restricted models)
 authHeader=()
