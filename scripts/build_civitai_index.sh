@@ -14,8 +14,8 @@ fi
 
 INDEX_MD="${OUT_DIR}/INDEX.md"
 echo -e "# FLUX LoRAs Index\n\n" > "$INDEX_MD"
-echo -e "| Preview | Name | Version | CivitAI | File | Trigger Words |" >> "$INDEX_MD"
-echo -e "|---|---|---|---|---|---|" >> "$INDEX_MD"
+echo "| Preview | Name | Version | CivitAI | File | Trigger Words | Details |" >> "$INDEX_MD"
+echo "|---|---|---|---|---|---|---|" >> "$INDEX_MD"
 
 # Helpers
 trim() { awk '{$1=$1};1'; }
