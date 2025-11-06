@@ -2,7 +2,7 @@
 # Usage: build_civitai_index.sh runtime/civitai_links.txt docs/loras
 set -euo pipefail
 
-INPUT_FILE="${1:-runtime/civitai_links.txt}"
+INPUT_FILE="${1:-runtime/civitai_models.txt}"
 OUT_DIR="${2:-docs/loras}"
 mkdir -p "$OUT_DIR"/_readmes "$OUT_DIR"/_images
 
