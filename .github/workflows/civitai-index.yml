@@ -25,7 +25,7 @@ jobs:
         env:
           CIVITAI_API_TOKEN: ${{ secrets.CIVITAI_API_TOKEN }}
         run: |
-          bash scripts/build_civitai_index.sh runtime/civitai_links.txt docs/loras
+          bash scripts/build_civitai_index.sh runtime/civitai_models.txt docs/loras
 
       - name: Commit changes
         run: |
