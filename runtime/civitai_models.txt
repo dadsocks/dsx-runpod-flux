@@ -11,3 +11,4 @@ https://civitai.com/api/download/models/792756
 https://civitai.com/api/download/models/2140412
 https://civitai.com/api/download/models/829996
 https://civitai.com/api/download/models/900870
+https://civitai.com/api/download/models/2367670
